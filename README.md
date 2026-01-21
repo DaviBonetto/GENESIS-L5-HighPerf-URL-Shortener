@@ -34,26 +34,37 @@
 
 ```mermaid
 flowchart LR
-    subgraph Client
-        A[🌐 Browser/Client]
+    subgraph Client ["Client Side"]
+        A["🌐 Browser/Client"]
     end
-    
-    subgraph GENESIS["GENESIS Engine"]
-        B[🦀 Actix-Web Server]
-        C[🧬 Bloom Filter<br/>L2 Cache]
-        D[💾 PostgreSQL<br/>L4 Storage]
+
+    subgraph GENESIS ["GENESIS System"]
+        direction TB
+        B["🦀 Actix-Web Server"]
+        C["🧬 Bloom Filter L2"]
+        D["💾 PostgreSQL L4"]
     end
+
+    %% Fluxo Principal
+    A -->|"POST /shorten"| B
+    B -->|"1. Check/Insert"| C
+    B -.->|"2. Async Save"| D
     
-    A -->|POST /shorten| B
-    A -->|GET /{code}| B
-    B -->|O(1) Check| C
-    C -->|If exists| D
-    B -->|302 + Cache-Control| A
+    %% Fluxo de Redirecionamento
+    A -->|"GET /code"| B
+    B -->|"3. Check Bloom"| C
+    C -- "Exists?" --> B
+    B -->|"4. Fetch Original"| D
+    D -->|"302 Found"| B
+    B -->|"Redirect"| A
+
+    classDef rust fill:#dea584,stroke:#333,stroke-width:2px,color:black;
+    classDef db fill:#336791,stroke:#333,stroke-width:2px,color:white;
+    classDef bloom fill:#ff9f43,stroke:#333,stroke-width:2px,color:black;
     
-    style A fill:#e1f5fe
-    style B fill:#fff3e0
-    style C fill:#f3e5f5
-    style D fill:#e8f5e9
+    class B rust;
+    class D db;
+    class C bloom;
 ```
 
 ### Layer Overview
